@@ -104,24 +104,31 @@ _Fable.MeadowSQLiteProvider.connectAsync(
 
 		// 8. Transaction
 		_Fable.log.info('--- Step 8: Transaction ---');
-		let tmpBulkInsert = tmpDB.transaction(
-			(pBooks) =>
-			{
-				let tmpBulkStmt = tmpDB.prepare(
-					`INSERT INTO Book (GUIDBook, Title, Author, YearPublished, Price) VALUES (?, ?, ?, ?, ?)`
-				);
-				for (let tmpBook of pBooks)
-				{
-					tmpBulkStmt.run(tmpBook.GUID, tmpBook.Title, tmpBook.Author, tmpBook.Year, tmpBook.Price);
-				}
-			});
-
-		tmpBulkInsert(
+		// node:sqlite's DatabaseSync has no `.transaction(fn)` helper (that was
+		// a better-sqlite3 idiom).  Bracket the bulk insert manually.
+		let tmpBulkBooks =
 			[
 				{ GUID: _Fable.fable.getUUID(), Title: 'Snow Crash', Author: 'Neal Stephenson', Year: 1992, Price: 13.99 },
 				{ GUID: _Fable.fable.getUUID(), Title: 'Hyperion', Author: 'Dan Simmons', Year: 1989, Price: 15.50 },
 				{ GUID: _Fable.fable.getUUID(), Title: 'Foundation', Author: 'Isaac Asimov', Year: 1951, Price: 10.99 }
-			]);
+			];
+		let tmpBulkStmt = tmpDB.prepare(
+			`INSERT INTO Book (GUIDBook, Title, Author, YearPublished, Price) VALUES (?, ?, ?, ?, ?)`
+		);
+		tmpDB.exec('BEGIN');
+		try
+		{
+			for (let tmpBook of tmpBulkBooks)
+			{
+				tmpBulkStmt.run(tmpBook.GUID, tmpBook.Title, tmpBook.Author, tmpBook.Year, tmpBook.Price);
+			}
+			tmpDB.exec('COMMIT');
+		}
+		catch (pError)
+		{
+			tmpDB.exec('ROLLBACK');
+			throw pError;
+		}
 		_Fable.log.info('Bulk insert (3 books) committed in a single transaction.');
 
 		let tmpFinalBooks = tmpDB.prepare(`SELECT * FROM Book ORDER BY IDBook`).all();
