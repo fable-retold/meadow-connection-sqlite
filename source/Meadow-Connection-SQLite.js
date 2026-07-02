@@ -99,6 +99,11 @@ class MeadowConnectionSQLite extends libFableServiceProviderBase
 		return this._SchemaProvider.createIndex(pIndexStatement, fCallback);
 	}
 
+	dropIndex(pTableName, pIndexName, fCallback)
+	{
+		return this._SchemaProvider.dropIndex(pTableName, pIndexName, fCallback);
+	}
+
 	createIndices(pMeadowTableSchema, fCallback)
 	{
 		return this._SchemaProvider.createIndices(pMeadowTableSchema, fCallback);
