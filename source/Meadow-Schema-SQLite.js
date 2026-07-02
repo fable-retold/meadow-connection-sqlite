@@ -349,6 +349,34 @@ class MeadowSchemaSQLite extends libFableServiceProviderBase
 	}
 
 	/**
+	 * Programmatically drop a single index if it exists (idempotent).
+	 *
+	 * @param {string} pTableName
+	 * @param {string} pIndexName
+	 * @param {Function} fCallback - callback(pError)
+	 */
+	dropIndex(pTableName, pIndexName, fCallback)
+	{
+		if (!this._Database)
+		{
+			this.log.error(`Meadow-SQLite DROP INDEX ${pIndexName} failed: not connected.`);
+			return fCallback(new Error('Not connected to SQLite'));
+		}
+
+		try
+		{
+			this._Database.exec(`DROP INDEX IF EXISTS "${pIndexName}"`);
+			this.log.info(`Meadow-SQLite DROP INDEX ${pIndexName} executed.`);
+			return fCallback();
+		}
+		catch (pDropError)
+		{
+			this.log.error(`Meadow-SQLite DROP INDEX ${pIndexName} failed!`, pDropError);
+			return fCallback(pDropError);
+		}
+	}
+
+	/**
 	 * Programmatically create all indices for a single table.
 	 *
 	 * @param {object} pMeadowTableSchema - Meadow table schema object
