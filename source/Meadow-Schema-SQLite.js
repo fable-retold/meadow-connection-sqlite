@@ -92,6 +92,7 @@ class MeadowSchemaSQLite extends libFableServiceProviderBase
 					tmpCreateTableStatement += `        ${tmpColumn.StorageColumn} TEXT`;
 					break;
 				default:
+					this.log.error(`Meadow-SQLite ${pMeadowTableSchema.TableName}.${tmpColumn.Column} has unsupported DataType [${tmpColumn.DataType}]; no column definition was emitted and the generated DDL will be malformed.`);
 					break;
 			}
 		}
@@ -131,7 +132,7 @@ class MeadowSchemaSQLite extends libFableServiceProviderBase
 		}
 		catch (pError)
 		{
-			this.log.error(`Meadow-SQLite CREATE TABLE ${pMeadowTableSchema.TableName} failed!`, pError);
+			this.log.error(`Meadow-SQLite CREATE TABLE ${pMeadowTableSchema.TableName} failed: ${pError}`, pError);
 			return fCallback(pError);
 		}
 	}
